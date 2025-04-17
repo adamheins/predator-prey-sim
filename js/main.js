@@ -78,7 +78,31 @@ function movePrey(preyList, predatorList) {
   var neighbourDists = calcNeighbourDists(preyList, config.prey.minSeparation,
       config.env.screen);
   var meanHeading = calcMeanHeading(preyList);
-  preyList.forEach(function(prey, index) {
+
+  preyList.forEach((prey, index) => {
+      if (index === 0) {
+          let angdir = 0;
+          if (config.keyMap.has("d") || config.keyMap.has("ArrowRight")) {
+              angdir -= 1;
+          }
+          if (config.keyMap.has("a") || config.keyMap.has("ArrowLeft")) {
+              angdir += 1
+          }
+
+          if (angdir !== 0) {
+              let turnAngle = angdir * config.prey.maxTurnAngle;
+              let c = Math.cos(turnAngle);
+              let s = Math.sin(turnAngle);
+              let x = prey.vel.x;
+              let y = prey.vel.y;
+              prey.vel = new Vector(c * x + s * y, -s * x + c * y);
+
+              // Update the prey's position and bound it so that it stays on the screen.
+              prey.pos = prey.pos.add(prey.vel).bound(config.env.screen);
+              return;
+          }
+      }
+
     prey.move(predatorList, config.prey.maxTurnAngle,
         config.prey.predatorSightDist, neighbourDists.tooFar[index],
         meanHeading, neighbourDists.tooClose[index], neighbourDists.dist[index],
@@ -115,8 +139,12 @@ function init() {
  */
 function render(ctx, preyList, predatorList) {
   ctx.clearRect(0, 0, config.env.screen.x, config.env.screen.y);
-  preyList.forEach(function(prey) {
-    prey.draw(ctx, 'black');
+  preyList.forEach((prey, index) => {
+        let color = 'black';
+      if (index === 0) {
+        color = 'red';
+      }
+    prey.draw(ctx, color);
   });
   predatorList.forEach(function(predator) {
     predator.draw(ctx, 'red');
@@ -169,6 +197,16 @@ function play() {
 function run() {
   var canvas = document.getElementById('simCanvas');
   var ctx = canvas.getContext('2d');
+
+  let keyMap = new Map();
+  document.addEventListener('keydown', event => {
+      keyMap.set(event.key, true);
+  });
+
+  document.addEventListener('keyup', event => {
+      keyMap.delete(event.key);
+  });
+  config.keyMap = keyMap;
 
   config.env.screenWidth = canvas.width;
   config.env.screenHeight = canvas.height;
