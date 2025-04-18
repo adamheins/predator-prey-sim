@@ -147,7 +147,7 @@ function render(ctx, preyList, predatorList) {
     prey.draw(ctx, color);
   });
   predatorList.forEach(function(predator) {
-    predator.draw(ctx, 'red');
+    predator.draw(ctx, 'blue');
   });
 }
 
